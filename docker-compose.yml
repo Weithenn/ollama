@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - 11434:11434
+    volumes:
+      - .:/code
+      - ./ollama/ollama:/root/.ollama
+    container_name: ollama
+    pull_policy: always
+    tty: true
+    restart: always
+    networks:
+      - ollama-vnet
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    volumes:
+      - ./ollama/open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - 44380:8080
+    environment:
+      - '/ollama/api=http://ollama:11434/api'
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+    networks:
+      - ollama-vnet
+
+networks:
+  ollama-vnet:
+    external: false
